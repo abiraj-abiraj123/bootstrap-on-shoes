@@ -1,28 +1,6 @@
 pipeline {
-   agent {
-    label 'jenkins-agent'
-}
-
-            yaml """
-apiVersion: v1
-kind: Pod
-metadata:
-  labels:
-    some-label: kaniko
-spec:
-  containers:
-    - name: kaniko
-      image: gcr.io/kaniko-project/executor:latest
-      args: ["--dockerfile=Dockerfile", "--context=dir:///workspace/", "--destination=abiraj165/bootstrap-app:latest"]
-      volumeMounts:
-        - name: kaniko-secret
-          mountPath: /kaniko/.docker
-  volumes:
-    - name: kaniko-secret
-      secret:
-        secretName: docker-registry-secret
-"""
-        }
+    agent {
+        label 'jenkins-agent'
     }
 
     environment {
@@ -39,9 +17,9 @@ spec:
 
         stage('Build and Push Docker Image') {
             steps {
-                container('kaniko') {
-                    sh '/kaniko/executor --dockerfile=Dockerfile --context=dir:///workspace/ --destination=$DOCKER_IMAGE'
-                }
+                sh 'docker build -t $DOCKER_IMAGE .'
+                sh 'docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD'
+                sh 'docker push $DOCKER_IMAGE'
             }
         }
 
