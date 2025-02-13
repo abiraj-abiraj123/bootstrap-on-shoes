@@ -1,9 +1,13 @@
 pipeline {
-    agent any
+    agent {
+        label 'jenkins'
+    }
+
     environment {
-        DOCKER_IMAGE = 'abiraj165/bootstrap-app/Dockerfile'
+        DOCKER_IMAGE = 'abiraj165/bootstrap-app:latest'
         K8S_DEPLOYMENT = 'k8s/bootstrap-deployment.yaml'
     }
+
     stages {
         stage('Clone Repository') {
             steps {
@@ -11,14 +15,16 @@ pipeline {
             }
         }
 
-        stage('Build and Push Image with Kaniko') {
+        stage('Build Docker Image') {
             steps {
-                container('kaniko') {
-                    sh '''
-                    /kaniko/executor --context `pwd` --dockerfile `pwd`/Dockerfile \
-                    --destination=abiraj165/bootstrap-app:latest \
-                    --cache=true
-                    '''
+                sh 'docker build -t $DOCKER_IMAGE .'
+            }
+        }
+
+        stage('Push Image to Docker Hub') {
+            steps {
+                withDockerRegistry([credentialsId: 'dockerhub-credentials', url: '']) {
+                    sh 'docker push $DOCKER_IMAGE'
                 }
             }
         }
