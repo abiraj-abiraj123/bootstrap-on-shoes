@@ -2,13 +2,14 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "abiraj165/bootstrap-app:latest"  // Change this to your Docker Hub username
+        DOCKER_IMAGE = 'abiraj165/bootstrap-app:latest'
+        K8S_DEPLOYMENT = 'k8s/bootstrap-deployment.yaml'
     }
 
     stages {
         stage('Clone Repository') {
             steps {
-                git 'https://github.com/abiraj-abiraj123/bootstrap-on-shoes.git'
+                git branch: 'main', credentialsId: 'github-credentials', url: 'https://github.com/abiraj-abiraj123/bootstrap-on-shoes.git'
             }
         }
 
@@ -18,10 +19,9 @@ pipeline {
             }
         }
 
-        stage('Push to Docker Hub') {
+        stage('Push Image to Docker Hub') {
             steps {
-                withCredentials([string(credentialsId: 'docker-hub-token', variable: 'DOCKER_HUB_PASS')]) {
-                    sh 'echo $DOCKER_HUB_PASS | docker login -u abiraj123 --password-stdin'
+                withDockerRegistry([credentialsId: 'dockerhub-credentials', url: '']) {
                     sh 'docker push $DOCKER_IMAGE'
                 }
             }
@@ -29,19 +29,8 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                sh 'kubectl apply -f k8s/deployment.yaml'
-                sh 'kubectl apply -f k8s/service.yaml'
+                sh 'kubectl apply -f $K8S_DEPLOYMENT'
             }
-        }
-
-        
-    }
-    post {
-        success {
-            echo '✅ Deployment Successful!'
-        }
-        failure {
-            echo '❌ Deployment Failed. Check logs!'
         }
     }
 }
