@@ -1,26 +1,24 @@
 pipeline {
-    agent any
+    agent {
+        docker { image 'docker:latest' }
+    }
 
     environment {
-        DOCKER_IMAGE = 'abiraj165/bootstrap-app/Dockerfile'
+        DOCKER_IMAGE = 'abiraj165/bootstrap-app:latest'
         K8S_DEPLOYMENT = 'k8s/bootstrap-deployment.yaml'
     }
 
     stages {
         stage('Clone Repository') {
             steps {
-                script {
-                    echo "Cloning repository..."
-                    git branch: 'main', credentialsId: 'github-credentials', url: 'https://github.com/abiraj-abiraj123/bootstrap-on-shoes.git'
-                }
+                git branch: 'main', credentialsId: 'github-credentials', url: 'https://github.com/abiraj-abiraj123/bootstrap-on-shoes.git'
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    echo "Building Docker image..."
-                    sh 'docker build -t $DOCKER_IMAGE .'
+                    def app = docker.build("${DOCKER_IMAGE}")
                 }
             }
         }
@@ -28,9 +26,8 @@ pipeline {
         stage('Push Image to Docker Hub') {
             steps {
                 script {
-                    echo "Pushing Docker image..."
-                    withDockerRegistry([credentialsId: 'dockerhub-credentials', url: '']) {
-                        sh 'docker push $DOCKER_IMAGE'
+                    docker.withRegistry('', 'dockerhub-credentials') {
+                        docker.image("${DOCKER_IMAGE}").push()
                     }
                 }
             }
@@ -39,7 +36,6 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    echo "Deploying to Kubernetes..."
                     sh 'kubectl apply -f $K8S_DEPLOYMENT'
                 }
             }
