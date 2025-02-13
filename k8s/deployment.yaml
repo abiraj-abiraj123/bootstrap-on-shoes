@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bootstrap-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bootstrap-app
+  template:
+    metadata:
+      labels:
+        app: bootstrap-app
+    spec:
+      containers:
+        - name: bootstrap-app
+          image: abiraj165/bootstrap-app:latest  # Change this with your Docker Hub username
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bootstrap-service
+spec:
+  selector:
+    app: bootstrap-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer
