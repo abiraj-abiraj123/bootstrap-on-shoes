@@ -1,7 +1,5 @@
 pipeline {
-    agent {
-        label 'jenkins-agent'
-    }
+    agent any  // Run on any available Jenkins agent
 
     environment {
         DOCKER_IMAGE = 'abiraj165/bootstrap-app:latest'
@@ -15,11 +13,17 @@ pipeline {
             }
         }
 
-        stage('Build and Push Docker Image') {
+        stage('Build Docker Image') {
             steps {
                 sh 'docker build -t $DOCKER_IMAGE .'
-                sh 'docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD'
-                sh 'docker push $DOCKER_IMAGE'
+            }
+        }
+
+        stage('Push Image to Docker Hub') {
+            steps {
+                withDockerRegistry([credentialsId: 'dockerhub-credentials', url: '']) {
+                    sh 'docker push $DOCKER_IMAGE'
+                }
             }
         }
 
