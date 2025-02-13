@@ -1,5 +1,7 @@
 pipeline {
-    agent any
+    agent {
+        docker { image 'docker:latest' }
+    }
 
     environment {
         DOCKER_IMAGE = 'abiraj165/bootstrap-app:latest'
@@ -15,21 +17,27 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $DOCKER_IMAGE .'
+                script {
+                    def app = docker.build("${DOCKER_IMAGE}")
+                }
             }
         }
 
         stage('Push Image to Docker Hub') {
             steps {
-                withDockerRegistry([credentialsId: 'dockerhub-credentials', url: '']) {
-                    sh 'docker push $DOCKER_IMAGE'
+                script {
+                    docker.withRegistry('', 'dockerhub-credentials') {
+                        docker.image("${DOCKER_IMAGE}").push()
+                    }
                 }
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
-                sh 'kubectl apply -f $K8S_DEPLOYMENT'
+                script {
+                    sh 'kubectl apply -f $K8S_DEPLOYMENT'
+                }
             }
         }
     }
