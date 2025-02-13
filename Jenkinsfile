@@ -6,17 +6,19 @@ apiVersion: v1
 kind: Pod
 metadata:
   labels:
-    some-label: docker
+    some-label: kaniko
 spec:
   containers:
-    - name: docker
-      image: docker:latest
-      command: ["cat"]
-      tty: true
-      securityContext:
-        privileged: true
-    - name: jnlp
-      image: jenkins/inbound-agent
+    - name: kaniko
+      image: gcr.io/kaniko-project/executor:latest
+      args: ["--dockerfile=Dockerfile", "--context=dir:///workspace/", "--destination=abiraj165/bootstrap-app:latest"]
+      volumeMounts:
+        - name: kaniko-secret
+          mountPath: /kaniko/.docker
+  volumes:
+    - name: kaniko-secret
+      secret:
+        secretName: docker-registry-secret
 """
         }
     }
@@ -33,20 +35,10 @@ spec:
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build and Push Docker Image') {
             steps {
-                container('docker') {
-                    sh 'docker build -t $DOCKER_IMAGE .'
-                }
-            }
-        }
-
-        stage('Push Image to Docker Hub') {
-            steps {
-                container('docker') {
-                    withDockerRegistry([credentialsId: 'dockerhub-credentials', url: '']) {
-                        sh 'docker push $DOCKER_IMAGE'
-                    }
+                container('kaniko') {
+                    sh '/kaniko/executor --dockerfile=Dockerfile --context=dir:///workspace/ --destination=$DOCKER_IMAGE'
                 }
             }
         }
