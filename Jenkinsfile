@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        DOCKER_IMAGE = 'abiraj165/bootstrap-app:latest'
+        DOCKER_IMAGE = 'abiraj165/bootstrap-app/Dockerfile'
         K8S_DEPLOYMENT = 'k8s/bootstrap-deployment.yaml'
     }
     stages {
