@@ -1,7 +1,6 @@
 pipeline {
-    agent {
-        docker { image 'docker:latest' }
-    }
+    agent any{
+        
 
     environment {
         DOCKER_IMAGE = 'abiraj165/bootstrap-app:latest'
@@ -39,6 +38,7 @@ pipeline {
                     sh 'kubectl apply -f $K8S_DEPLOYMENT'
                 }
             }
+        }
         }
     }
 }
