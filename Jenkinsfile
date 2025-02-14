@@ -1,6 +1,5 @@
 pipeline {
-    agent any{
-        
+    agent any
 
     environment {
         DOCKER_IMAGE = 'abiraj165/bootstrap-app:latest'
@@ -17,7 +16,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    def app = docker.build("${DOCKER_IMAGE}")
+                    def app = docker.build("${DOCKER_IMAGE}", ".")
                 }
             }
         }
@@ -35,10 +34,9 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    sh 'kubectl apply -f $K8S_DEPLOYMENT'
+                    sh "kubectl apply -f ${K8S_DEPLOYMENT}"
                 }
             }
-        }
         }
     }
 }
